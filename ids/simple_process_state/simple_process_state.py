@@ -86,3 +86,38 @@ class SimpleProcessState(MetaIDS):
                 alert = True
                 res[topic] = dif
         return alert, res
+
+    def save_trained_model(self):
+        if self.settings["model-file"] is None:
+            return False
+
+        model = {
+            "_name": self._name,
+            "settings": self.settings,
+            "q_min": self.q_min,
+            "q_max": self.q_max
+        }
+
+        with self._open_file(self._resolve_model_file_path(), mode="wt") as f:
+            f.write(json.dumps(model, indent=4) + "\n")
+        return True
+
+    def load_trained_model(self):
+        if self.settings["model-file"] is None:
+            return False
+
+        try:  # Open model file
+            with self._open_file(self._resolve_model_file_path(), mode="rt") as f:
+                model = json.load(f)
+        except FileNotFoundError:
+            settings.logger.info(
+                "Model file {} not found.".format(str(self._resolve_model_file_path()))
+            )
+            return False
+
+        # Load model
+        assert self._name == model["_name"]
+        self.settings = model["settings"]
+        self.q_min = model["q_min"]
+        self.q_max = model["q_max"]
+        return True
