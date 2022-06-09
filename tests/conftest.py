@@ -16,6 +16,7 @@ IDSNAMES = [
     "Optimal",
     "RandomForest",
     "SVM",
+    "SimpleProcessState",
 ]
 
 

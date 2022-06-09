@@ -10,6 +10,7 @@ from .interarrivaltime.Mean import InterArrivalTimeMean
 from .interarrivaltime.Range import InterArrivalTimeRange
 from .oracles.OptimalIDS import OptimalIDS
 from .oracles.DummyIDS import DummyIDS
+from .simple_process_state.simple_process_state import SimpleProcessState
 
 idss = [
     Autoregression,
@@ -23,6 +24,7 @@ idss = [
     DummyIDS,
     RandomForest,
     SVM,
+    SimpleProcessState,
 ]
 
 
