@@ -11,6 +11,7 @@ from .interarrivaltime.Range import InterArrivalTimeRange
 from .oracles.OptimalIDS import OptimalIDS
 from .oracles.DummyIDS import DummyIDS
 from .simple_process_state.simple_process_state import SimpleProcessState
+from .probabilistic_suffix_trees.pst import ProbabilisticSuffixTree
 
 idss = [
     Autoregression,
@@ -25,6 +26,7 @@ idss = [
     RandomForest,
     SVM,
     SimpleProcessState,
+    ProbabilisticSuffixTree,
 ]
 
 

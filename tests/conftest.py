@@ -17,6 +17,7 @@ IDSNAMES = [
     "RandomForest",
     "SVM",
     "SimpleProcessState",
+    "ProbabilisticSuffixTree",
 ]
 
 
