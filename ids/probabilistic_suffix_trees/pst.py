@@ -9,7 +9,7 @@ class ProbabilisticSuffixTree(MetaIDS):
     _requires = ["train.ipal", "live.ipal"]
     _proc_state_default_settings = {
         "n": 3,  # depth of the tree
-        "threshold": 0.5
+        "threshold": 0.0208
     }
 
     def __init__(self, name=None):
@@ -20,10 +20,10 @@ class ProbabilisticSuffixTree(MetaIDS):
         self.slid_win = []
 
     # creates node name in tree(=key for dictionary) for ipal message
-    def get_key(self, ipal: json) -> (str, str, str, str, [str]):
+    def get_key(self, ipal: json) -> str:
         src = ipal["src"].split(":")[0]
         dest = ipal["dest"].split(":")[0]
-        return src, dest, ipal["type"], ipal["activity"], ipal["data"].keys()
+        return "({}, {}, {}, {}, {})".format(src, dest, ipal["type"], ipal["activity"], list(ipal["data"].keys()))
 
     # recurse function calculating likelihood of each node in tree
     def calc_likelihood(self, tree: {}, ref: int):
@@ -43,7 +43,7 @@ class ProbabilisticSuffixTree(MetaIDS):
             for line in f.readlines():
                 curr = json.loads(line)
 
-                if len(win) < self.settings["n"] - 1:
+                if len(win) < self.settings["n"] - 1:   # collect first n-1 messages
                     win.append(curr)
                 elif len(win) == self.settings["n"] - 1:
                     win.append(curr)
@@ -70,7 +70,7 @@ class ProbabilisticSuffixTree(MetaIDS):
         if len(self.slid_win) == self.settings["n"]:
             self.slid_win.pop(0)
 
-        key = self.get_key(msg)
+        key = str(self.get_key(msg)).replace('\'', '')
         self.slid_win.append(key)
         pos = self.tree
         for m in self.slid_win:
