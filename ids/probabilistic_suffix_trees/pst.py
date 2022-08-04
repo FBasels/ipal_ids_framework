@@ -27,16 +27,17 @@ class ProbabilisticSuffixTree(MetaIDS):
 
     # recurse function calculating likelihood of each node in tree
     def calc_likelihood(self, tree: {}, ref: int):
-        if len(tree.keys()) == 1:
+        if len(tree.keys()) == 2:
             tree["likelihood"] = tree["count"] / ref
         else:
             for k in tree.keys():
-                if k != "count":
+                if k != "count" and k != "msg_ref":
                     self.calc_likelihood(tree[k], ref)
             tree["likelihood"] = tree["count"] / ref
 
     def train(self, ipal=None, state=None):
         win = []
+        msg_ref = 1     # used for visualization
 
         # build tree
         with self._open_file(ipal) as f:
@@ -55,7 +56,8 @@ class ProbabilisticSuffixTree(MetaIDS):
                             sub_tree = sub_tree[key]
                             sub_tree["count"] += 1
                         else:
-                            sub_tree[key] = {"count": 1}
+                            sub_tree[key] = {"count": 1, "msg_ref": msg_ref}
+                            msg_ref += 1
                             sub_tree = sub_tree[key]
                     win.pop(0)
                 else:

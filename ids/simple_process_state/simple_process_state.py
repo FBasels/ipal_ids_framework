@@ -57,8 +57,8 @@ class SimpleProcessState(MetaIDS):
             s_min, s_max = self.update_min_max(win, s_min, s_max)
             # calculate q_min and q_max
             for k in s_min.keys():
-                self.q_min[k] = s_min[k] + self.settings["q"] * (s_max[k] - s_min[k])
-                self.q_max[k] = s_max[k] + self.settings["q"] * (s_max[k] - s_min[k])
+                self.q_min[k] = s_min[k] + (self.settings["q"] * (s_max[k] - s_min[k]))
+                self.q_max[k] = s_max[k] + (self.settings["q"] * (s_max[k] - s_min[k]))
             settings.logger.info("-" * 10 + "TRAINING RESULTS" + "-" * 10 +
                                  "\nq_min: {}".format(self.q_min) +
                                  "\nq_max: {}".format(self.q_max) +
@@ -67,7 +67,6 @@ class SimpleProcessState(MetaIDS):
             print("q_min: {}".format(self.q_min))
             print("q_max: {}".format(self.q_max))
             print("-" * 36)
-        print("Hey yo! Do not disturb, I am trying to train myself.")
 
     def new_state_msg(self, msg):
         # remove all msg from window which are older than n seconds
@@ -77,12 +76,12 @@ class SimpleProcessState(MetaIDS):
         self.slid_win.append(msg)
         alert = False
         res = {}
-        for topic in self.slid_win[0].keys():
+        for topic in self.slid_win[0]["state"].keys():
             dif = msg["state"][topic] - self.slid_win[0]["state"][topic]
-            if dif < self.q_min:
+            if dif < self.q_min[topic]:
                 alert = True
                 res[topic] = dif
-            elif dif > self.q_max:
+            elif dif > self.q_max[topic]:
                 alert = True
                 res[topic] = dif
         return alert, res
