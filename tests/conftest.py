@@ -20,6 +20,7 @@ IDSNAMES = [
     "Steadytime",
     "inter-arrival-mean",
     "inter-arrival-range",
+    "InvariantRulesIDS",
 ]
 
 

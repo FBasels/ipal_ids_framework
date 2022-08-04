@@ -13,6 +13,7 @@ from .simple.minmax import MinMax
 from .simple.steadytime import SteadyTime
 from .oracles.OptimalIDS import OptimalIDS
 from .oracles.DummyIDS import DummyIDS
+from .invariant_rules.invariant_rules_IDS import InvariantRulesIDS
 
 idss = [
     Autoregression,
@@ -30,6 +31,7 @@ idss = [
     RandomForest,
     SVM,
     SteadyTime,
+    InvariantRulesIDS,
 ]
 
 
