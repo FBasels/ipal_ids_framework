@@ -21,6 +21,7 @@ class InvariantRulesIDS(MetaIDS):
         "gamma_value": 0.9,  # same as in the paper
         "max_k": 4,
         "max_comp": 4,   # number of mixture components
+        "negated_states": 1,    # 1: create actuator predicates =x and !=x  -  0: only create actuator predicates =x
 
         # List of component identifiers. Separated in lists containing components of different parts. Here keyArray for SWaT
         "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
@@ -48,7 +49,7 @@ class InvariantRulesIDS(MetaIDS):
             "gmm_keys": list(self.gmm_models.keys())  # makes loading the model easier
         }
         for entry in self.gmm_models:
-            gauss = self.gmm_models[entry](0)
+            gauss = self.gmm_models[entry][0]
             model[entry] = {"gaussian": {
                 "weights": gauss.weights_,
                 "means": gauss.means_,
@@ -296,9 +297,10 @@ class InvariantRulesIDS(MetaIDS):
                         entry_trans_map[entry] = trans
                         training_data = pd.concat([training_data, newdf], axis=1)
                         # add all "not in state x" (entry!=x) predicates
-                        for v in set(training_data[entry].values):
-                            training_data[entry + "!=" + str(v)] = 0
-                            training_data.loc[training_data[entry] != v, entry + "!=" + str(v)] = 1
+                        if self.settings["negated_states"] == 1:
+                            for v in set(training_data[entry].values):
+                                training_data[entry + "!=" + str(v)] = 0
+                                training_data.loc[training_data[entry] != v, entry + "!=" + str(v)] = 1
                         training_data.drop(entry, axis=1, inplace=True)
                     #
                     #
@@ -567,7 +569,7 @@ class InvariantRulesIDS(MetaIDS):
             "gmm_keys": list(self.gmm_models.keys())    # makes loading the model easier
         }
         for entry in self.gmm_models:
-            gauss = self.gmm_models[entry](0)
+            gauss = self.gmm_models[entry][0]
             model[entry] = {"gaussian": {
                                 "weights": gauss.weights_,
                                 "means": gauss.means_,
