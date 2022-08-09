@@ -1,5 +1,4 @@
-import os
-
+import ipal_iids.settings as settings
 from ids.ids import MetaIDS
 import pandas as pd
 import numpy as np
@@ -33,6 +32,56 @@ class InvariantRulesIDS(MetaIDS):
         super().__init__(name=name)
         self._add_default_settings(self._invariant_rules_default_settings)
 
+        self.last_state = None  # used to calculate the change of a sensor value to previous message TODO maybe remove and let the transcriber calculate it. !!!BUT the original value can not be overwritten. Transcriber has to add a new key!!!
+        self.sensors = []
+        self.actuators = {}
+        self.gmm_models = {}    # key: entry, values: (gmm component, score_threshold)
+        self.rule_list = []
+
+    def intermediate_model_saving(self, stage: str):
+        model = {
+            "_name": self._name,
+            "settings": self.settings,
+            "sensors": self.sensors,
+            "actuators": self.actuators,
+            "rules": self.rule_list,
+            "gmm_keys": list(self.gmm_models.keys())  # makes loading the model easier
+        }
+        for entry in self.gmm_models:
+            gauss = self.gmm_models[entry](0)
+            model[entry] = {"gaussian": {
+                "weights": gauss.weights_,
+                "means": gauss.means_,
+                "covariances": gauss.covariances_
+            },
+                "threshold": self.gmm_models[entry][1]}
+
+        with self._open_file("./my_tests/intermediate_model_saving/{}.json".format(stage), mode='wt') as f:
+            f.write(json.dumps(model, indent=4) + "\n")
+
+    def restore_intermediate_model(self, stage: str):
+        try:
+            with self._open_file("./my_tests/intermediate_model_saving/{}.json".format(stage), mode='rt') as f:
+                model = json.load(f)
+        except FileNotFoundError:
+            settings.logger.info("Model file {} not found.".format(str(self._resolve_model_file_path())))
+            exit(1)
+
+        assert self._name == model["_name"]
+        self.settings = model["settings"]
+        self.sensors = model["sensors"]
+        self.actuators = model["actuators"]
+        self.rule_list = model["rules"]
+        for entry in model["gmm_keys"]:
+            means = model[entry]["gaussian"]["means"]
+            cov = model[entry]["gaussian"]["covariances"]
+            gmm = mixture.GaussianMixture(n_components=len(means))
+            gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(cov))
+            gmm.weights_ = model[entry]["gaussian"]["weights"]
+            gmm.means_ = means
+            gmm.covariances_ = cov
+            self.gmm_models[entry] = (gmm, model[entry]["threshold"])
+
     def distr_driven_pred(self, training_data: pd.DataFrame, cont_vars: []):
         print("Generating distribution-driven predicates...")
         for entry in cont_vars:
@@ -58,6 +107,7 @@ class InvariantRulesIDS(MetaIDS):
             cluster_num = len(training_data[entry + '_cluster'].unique())  # INFO: number of different values in prediction,
             scores = clf.score_samples(X)
             score_threshold = scores.min() * self.settings["sigma"]
+            self.gmm_models[entry] = (clf, score_threshold)
             training_data.drop(entry, axis=1, inplace=True)  # INFO remove [...]_update entries TODO used for testing purposes. Maybe have a look at this when implementing detection
 
     def event_driven_pred(self, training_data: pd.DataFrame, cont_vars: [], disc_vars: [], max_dict: {}, min_dict: {},
@@ -110,6 +160,7 @@ class InvariantRulesIDS(MetaIDS):
                                 invar_entry = Util.conInvarEntry(target_var, lgRegr.intercept_ - max_error, '<',
                                                                  max_dict, min_dict, lgRegr.coef_,
                                                                  active_vars)  # INFO create label
+                                print("--- DEBUG: related sensors: label {}".format(invar_entry))
                                 training_data[invar_entry] = 0
                                 training_data.loc[training_data[target_var] < lgRegr.intercept_ - max_error,
                                                   invar_entry] = 1  # INFO insert 1 whenever the current sensor has a lover vale than intercept - error
@@ -179,6 +230,7 @@ class InvariantRulesIDS(MetaIDS):
                 if max_value != min_value:
                     training_data[entry + '_update'] = training_data[entry].shift(-1) - training_data[entry]
                     cont_vars.append(entry + '_update')
+                    self.sensors.append(entry)
         # remove last row, due to NaNs in _update entries
         training_data = training_data[:len(training_data)-1]
 
@@ -186,7 +238,9 @@ class InvariantRulesIDS(MetaIDS):
 
         # saving intermediate results
         training_data.to_csv("./my_tests/data/swat_after_distribution_normal.csv", index=False)
+        self.intermediate_model_saving("gaussian_mixture_models")
         # training_data = pd.read_csv("./my_tests/data/swat_after_distribution_normal.csv")
+        # self.restore_intermediate_model("gaussian_mixture_models")
 
         # preparation for event-driven
         cont_vars = []  # INFO = continuous variables. Here label of normalized values
@@ -225,13 +279,14 @@ class InvariantRulesIDS(MetaIDS):
                 else:  # INFO categorical values
                     newdf = pd.get_dummies(training_data[entry]).rename(columns=lambda x: entry + '=' + str(x))  # INFO one-hot encoding of categorical values
                     if len(newdf.columns.values.tolist()) <= 1:  # INFO case only one state
+                        self.actuators[entry] = set(training_data[entry].values)
                         unique_value = training_data[entry].unique()[0]
                         dead_entries.append(entry + '=' + str(unique_value))
                         training_data = pd.concat([training_data, newdf], axis=1)  # INFO still added to training data...?
                         training_data.drop(entry, axis=1, inplace=True)
                     else:   # INFO more than one entry
-                        # TODO: add predicate "not in state x" (entry!=x) in addition to "in state x" (entry=x)
                         disc_vars.append(entry)
+                        self.actuators[entry] = set(training_data[entry].values)
                         trans = training_data[entry].shift(-1).fillna(method='ffill').astype(int).astype(str) + '->' + \
                                 training_data[entry].astype(int).astype(str)
                         training_data[entry + '_shift'] = trans
@@ -240,6 +295,10 @@ class InvariantRulesIDS(MetaIDS):
                         trans = [x for x in set(trans.array) if x.split("->")[0] != x.split("->")[1]]
                         entry_trans_map[entry] = trans
                         training_data = pd.concat([training_data, newdf], axis=1)
+                        # add all "not in state x" (entry!=x) predicates
+                        for v in set(training_data[entry].values):
+                            training_data[entry + "!=" + str(v)] = 0
+                            training_data.loc[training_data[entry] != v, entry + "!=" + str(v)] = 1
                         training_data.drop(entry, axis=1, inplace=True)
                     #
                     #
@@ -269,10 +328,12 @@ class InvariantRulesIDS(MetaIDS):
         training_data.to_csv("./my_tests/data/after_event_normal.csv", index=False)
         with open("./my_tests/data/dead_entries_after_event_normal.json", 'w') as f:
             json.dump(dead_entries, f)
+        self.intermediate_model_saving("gmm_and_regression")
         # reading intermediate results
         # training_data = pd.read_csv("./my_tests/data/after_event_normal.csv")
         # with open("./my_tests/data/dead_entries_after_event_normal.json", 'r') as f:
         #     dead_entries = json.load(f)
+        # self.restore_intermediate_model("gmm_and_regression")
 
         print("Start rule mining...")
         print('Gamma=' + str(self.settings["gamma_value"]) + ', theta=' + str(self.settings["theta_value"]))
@@ -296,6 +357,7 @@ class InvariantRulesIDS(MetaIDS):
         print('mode 2 time cost: ' + str((end_time - start_time_2) * 1.0 / 60))
         print('rule mining time cost: ' + str(time_cost))
 
+        # INFO I guess in the following, rules are filtered if they have no distribution-driven predicate. Remember this is done only for rules generated by mode 2
         rules = []
         for rule in rule_list_1:
             valid = False
@@ -311,8 +373,11 @@ class InvariantRulesIDS(MetaIDS):
             if valid == True:
                 rules.append(rule)
         rule_list_1 = rules
-        print('rule count: ' + str(len(rule_list_0) + len(rule_list_1)))
 
+        self.rule_list = rule_list_0 + rule_list_1
+        print('rule count: ' + str(len(self.rule_list)))
+
+        # INFO the following is just for inspecting the rules afterwards by printing it to a file
         # arrange rules based on phase of testbed
         phase_dict = {}
         for i in range(1, len(keyArray) + 1):
@@ -371,14 +436,172 @@ class InvariantRulesIDS(MetaIDS):
                 myfile.write('--------------------------------------------------------------------------- ' + '\n')
             myfile.close()
 
-    # TODO implement intrusion detection
-    def new_state_msg(self, msg):
-        pass
+    def new_state_msg(self, msg: {}):
+        if not self.last_state:
+            self.last_state = msg["state"]
+            return False, {}
+        states = msg["state"]
 
-    # TODO implement model saving
+        # preprocess msg
+        for s in states:
+            if s in self.actuators["keys"]:
+                # TODO: maybe check if state is allowed by checking if state ever occurred during training
+                for x in self.actuators[s]:
+                    if x != states[s]:
+                        states[s + "!=" + str(x)] = 1
+                        states[s + "=" + str(x)] = 0
+                    else:
+                        states[s + "!=" + str(x)] = 0
+                        states[s + "=" + str(x)] = 1
+                # TODO they check the amount of occurrences but this requires knowledge about all incoming messages (main.py line 175)
+            elif s in self.sensors:
+                # check corresponding gmm
+                update = self.last_state[s] - states[s]
+                gmm = self.gmm_models[s][0]
+                pred = gmm.predict(update)
+                states[s + "_update_cluster=" + str(pred)] = 1
+                score = gmm.score_samples(states[s + "_update"])
+                threshold = self.gmm_models[s][1]
+                if score < threshold:   # does not belong to one of the mixture components of this sensor
+                    return True, {"state": s, "alert": {"gmm_score": score, "threshold": threshold, "rule": "",
+                                                        "msg": "sensor update never occurred during training"}}
+            else:
+                # TODO: how to handle components that have only one value and thus are dropped during training?
+                return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
+                                                    "msg": "component identifier never occurred during training"}}
+
+        # check msg against rules
+        for rule in self.rule_list:
+            check = True
+            # check if conclusion of rule has to be checked
+            for pred in rule[0]:
+                if "_cluster" in pred:
+                    # sensor value, check cluster
+                    if pred not in states:
+                        check = False
+                        break
+                elif "=" or "!=" in pred:
+                    # actuator, check states
+                    if states[pred] == 0:
+                        check = False
+                        break
+                elif "<" in pred:
+                    # sensor value, check upper bound
+                    pred = pred.split("<")
+                    if len(pred) == 3:
+                        # predicate defines upper and lower bound, check both
+                        if states[pred[1]] <= pred[0] or states[pred[1]] >= pred[2]:
+                            check = False
+                            break
+                    else:
+                        if states[pred[0]] >= pred[1]:
+                            check = False
+                            break
+                elif ">" in pred:
+                    # sensor value, check lower bound
+                    pred = pred.split(">")
+                    if states[pred[0]] <= pred[1]:
+                        check = False
+                        break
+                else:
+                    settings.logger.critical("Invalid rule found. Premise {} invalid in rule {}".format(pred, rule))
+                    check = False
+                    break
+            # check conclusion of rule
+            if check:
+                for pred in rule[1]:
+                    if "_cluster" in pred:
+                        # sensor value, check cluster
+                        if pred not in states:
+                            return True, {"state": pred.split("_update_cluster")[0], "alert": {"gmm_score": None,
+                                                                                               "threshold": None,
+                                                                                               "rule": rule,
+                                                                                               "msg": "unsatisfied rule"}}
+                    elif "=" or "!=" in pred:
+                        # actuator value, check state
+                        if states[pred] == 0:
+                            return True, {"state": pred.split("=")[0], "alert": {"gmm_score": None,
+                                                                                               "threshold": None,
+                                                                                               "rule": rule,
+                                                                                               "msg": "unsatisfied rule"}}
+                    elif "<" in pred:
+                        # sensor value, check upper bound
+                        pred = pred.split("<")
+                        if len(pred) == 3:
+                            # predicate defines upper and lower bound, check both
+                            if states[pred[1]] <= pred[0] or states[pred[1]] >= pred[2]:
+                                return True, {"state": pred[1], "alert": {"gmm_score": None,
+                                                                          "threshold": None,
+                                                                          "rule": rule,
+                                                                          "msg": "unsatisfied rule"}}
+                        else:
+                            if states[pred[0]] >= pred[1]:
+                                return True, {"state": pred[0], "alert": {"gmm_score": None,
+                                                                          "threshold": None,
+                                                                          "rule": rule,
+                                                                          "msg": "unsatisfied rule"}}
+                    elif ">" in pred:
+                        # sensor value, check lower bound
+                        pred = pred.split(">")
+                        if states[pred[0]] <= pred[1]:
+                            return True, {"state": pred[0], "alert": {"gmm_score": None,
+                                                                      "threshold": None,
+                                                                      "rule": rule,
+                                                                      "msg": "unsatisfied rule"}}
+                    else:
+                        settings.logger.critical("Invalid rule found. Conclusion {} invalid in rule {}".format(pred, rule))
+                        break
+
+            return False, {}
+
     def save_trained_model(self):
-        pass
+        if self.settings["model-file"] is None:
+            return False
 
-    # TODO implement model loading
+        model = {
+            "_name": self._name,
+            "settings": self.settings,
+            "sensors": self.sensors,
+            "actuators": self.actuators,
+            "rules": self.rule_list,
+            "gmm_keys": list(self.gmm_models.keys())    # makes loading the model easier
+        }
+        for entry in self.gmm_models:
+            gauss = self.gmm_models[entry](0)
+            model[entry] = {"gaussian": {
+                                "weights": gauss.weights_,
+                                "means": gauss.means_,
+                                "covariances": gauss.covariances_
+                            },
+                            "threshold": self.gmm_models[entry][1]}
+
+        with self._open_file(self._resolve_model_file_path(), mode='wt') as f:
+            f.write(json.dumps(model, indent=4) + "\n")
+        return True
+
     def load_trained_model(self):
-        pass
+        if self.settings["model-file"] is None:
+            return False
+
+        try:
+            with self._open_file(self._resolve_model_file_path(), mode='rt') as f:
+                model = json.load(f)
+        except FileNotFoundError:
+            settings.logger.info("Model file {} not found.".format(str(self._resolve_model_file_path())))
+            return False
+
+        assert self._name == model["_name"]
+        self.settings = model["settings"]
+        self.sensors = model["sensors"]
+        self.actuators = model["actuators"]
+        self.rule_list = model["rules"]
+        for entry in model["gmm_keys"]:
+            means = model[entry]["gaussian"]["means"]
+            cov = model[entry]["gaussian"]["covariances"]
+            gmm = mixture.GaussianMixture(n_components=len(means))
+            gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(cov))
+            gmm.weights_ = model[entry]["gaussian"]["weights"]
+            gmm.means_ = means
+            gmm.covariances_ = cov
+            self.gmm_models[entry] = (gmm, model[entry]["threshold"])
+        return True
