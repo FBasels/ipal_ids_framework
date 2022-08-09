@@ -51,9 +51,9 @@ class InvariantRulesIDS(MetaIDS):
         for entry in self.gmm_models:
             gauss = self.gmm_models[entry][0]
             model[entry] = {"gaussian": {
-                "weights": gauss.weights_,
-                "means": gauss.means_,
-                "covariances": gauss.covariances_
+                "weights": gauss.weights_.tolist(),
+                "means": gauss.means_.tolist(),
+                "covariances": gauss.covariances_.tolist()
             },
                 "threshold": self.gmm_models[entry][1]}
 
@@ -74,11 +74,11 @@ class InvariantRulesIDS(MetaIDS):
         self.actuators = model["actuators"]
         self.rule_list = model["rules"]
         for entry in model["gmm_keys"]:
-            means = model[entry]["gaussian"]["means"]
-            cov = model[entry]["gaussian"]["covariances"]
+            means = np.array(model[entry]["gaussian"]["means"])
+            cov = np.array(model[entry]["gaussian"]["covariances"])
             gmm = mixture.GaussianMixture(n_components=len(means))
             gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(cov))
-            gmm.weights_ = model[entry]["gaussian"]["weights"]
+            gmm.weights_ = np.array(model[entry]["gaussian"]["weights"])
             gmm.means_ = means
             gmm.covariances_ = cov
             self.gmm_models[entry] = (gmm, model[entry]["threshold"])
@@ -280,14 +280,14 @@ class InvariantRulesIDS(MetaIDS):
                 else:  # INFO categorical values
                     newdf = pd.get_dummies(training_data[entry]).rename(columns=lambda x: entry + '=' + str(x))  # INFO one-hot encoding of categorical values
                     if len(newdf.columns.values.tolist()) <= 1:  # INFO case only one state
-                        self.actuators[entry] = set(training_data[entry].values)
+                        self.actuators[entry] = [int(x) for x in set(training_data[entry].values)]
                         unique_value = training_data[entry].unique()[0]
                         dead_entries.append(entry + '=' + str(unique_value))
                         training_data = pd.concat([training_data, newdf], axis=1)  # INFO still added to training data...?
                         training_data.drop(entry, axis=1, inplace=True)
                     else:   # INFO more than one entry
                         disc_vars.append(entry)
-                        self.actuators[entry] = set(training_data[entry].values)
+                        self.actuators[entry] = [int(x) for x in set(training_data[entry].values)]
                         trans = training_data[entry].shift(-1).fillna(method='ffill').astype(int).astype(str) + '->' + \
                                 training_data[entry].astype(int).astype(str)
                         training_data[entry + '_shift'] = trans
@@ -571,9 +571,9 @@ class InvariantRulesIDS(MetaIDS):
         for entry in self.gmm_models:
             gauss = self.gmm_models[entry][0]
             model[entry] = {"gaussian": {
-                                "weights": gauss.weights_,
-                                "means": gauss.means_,
-                                "covariances": gauss.covariances_
+                                "weights": gauss.weights_.tolist(),
+                                "means": gauss.means_.tolist(),
+                                "covariances": gauss.covariances_.tolist()
                             },
                             "threshold": self.gmm_models[entry][1]}
 
@@ -598,11 +598,11 @@ class InvariantRulesIDS(MetaIDS):
         self.actuators = model["actuators"]
         self.rule_list = model["rules"]
         for entry in model["gmm_keys"]:
-            means = model[entry]["gaussian"]["means"]
-            cov = model[entry]["gaussian"]["covariances"]
+            means = np.array(model[entry]["gaussian"]["means"])
+            cov = np.array(model[entry]["gaussian"]["covariances"])
             gmm = mixture.GaussianMixture(n_components=len(means))
             gmm.precisions_cholesky_ = np.linalg.cholesky(np.linalg.inv(cov))
-            gmm.weights_ = model[entry]["gaussian"]["weights"]
+            gmm.weights_ = np.array(model[entry]["gaussian"]["weights"])
             gmm.means_ = means
             gmm.covariances_ = cov
             self.gmm_models[entry] = (gmm, model[entry]["threshold"])
