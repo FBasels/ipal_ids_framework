@@ -348,7 +348,7 @@ class InvariantRulesIDS(MetaIDS):
         print('finish mode 0')
         print('mode 0 time cost: ' + str((time.time() - start_time) * 1.0 / 60))
 
-        ##mode 2 is quite costly, use mode 1 if want to save time
+        #mode 2 is quite costly, use mode 1 if want to save time
         start_time_2 = time.time()
         rule_list_1, item_dict_1 = Util.getRules(training_data, dead_entries, keyArray,
                                                  mode=2, gamma=self.settings["gamma_value"],
@@ -376,8 +376,7 @@ class InvariantRulesIDS(MetaIDS):
                 rules.append(rule)
         rule_list_1 = rules
 
-        self.rule_list = rule_list_0 + rule_list_1
-        print('rule count: ' + str(len(self.rule_list)))
+        print('rule count: ' + str(len(rule_list_0) + len(rule_list_1)))
 
         # INFO the following is just for inspecting the rules afterwards by printing it to a file
         # arrange rules based on phase of testbed
@@ -437,6 +436,16 @@ class InvariantRulesIDS(MetaIDS):
 
                 myfile.write('--------------------------------------------------------------------------- ' + '\n')
             myfile.close()
+
+        # INFO used for model storage
+        for i in range(1, len(keyArray) + 1):
+            for rule in phase_dict[i]:
+                rule = rule.split(" ---> ")
+                prem = rule[0].split(" and ")
+                prem = [x.strip() for x in prem]
+                conc = rule[1].split(" and ")
+                conc = [x.strip() for x in conc]
+                self.rule_list.append((prem, conc))
 
     def new_state_msg(self, msg: {}):
         if not self.last_state:
