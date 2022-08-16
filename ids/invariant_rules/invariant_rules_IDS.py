@@ -448,14 +448,17 @@ class InvariantRulesIDS(MetaIDS):
                 self.rule_list.append((prem, conc))
 
     def new_state_msg(self, msg: {}):
+        print("Current state message {}".format(msg))
         if not self.last_state:
+            # TODO maybe check at least the actuators here?
             self.last_state = msg["state"]
             return False, {}
-        states = msg["state"]
+        states = dict(msg["state"])
 
+        print("Preprocessing states")
         # preprocess msg
-        for s in states:
-            if s in self.actuators["keys"]:
+        for s in msg["state"]:
+            if s in self.actuators:
                 # TODO: maybe check if state is allowed by checking if state ever occurred during training
                 for x in self.actuators[s]:
                     if x != states[s]:
@@ -467,20 +470,25 @@ class InvariantRulesIDS(MetaIDS):
                 # TODO they check the amount of occurrences but this requires knowledge about all incoming messages (main.py line 175)
             elif s in self.sensors:
                 # check corresponding gmm
-                update = self.last_state[s] - states[s]
-                gmm = self.gmm_models[s][0]
+                update = np.array(self.last_state[s] - states[s]).reshape(-1, 1)
+                gmm = self.gmm_models[s + "_update"][0]
                 pred = gmm.predict(update)
                 states[s + "_update_cluster=" + str(pred)] = 1
-                score = gmm.score_samples(states[s + "_update"])
-                threshold = self.gmm_models[s][1]
+                score = gmm.score_samples(update)
+                threshold = self.gmm_models[s + "_update"][1]
                 if score < threshold:   # does not belong to one of the mixture components of this sensor
-                    return True, {"state": s, "alert": {"gmm_score": score, "threshold": threshold, "rule": "",
+                    self.last_state = msg["state"]
+                    return True, {"state": s, "alert": {"gmm_score": score[0], "threshold": threshold, "rule": "",
                                                         "msg": "sensor update never occurred during training"}}
             else:
                 # TODO: how to handle components that have only one value and thus are dropped during training?
+                print("State contains component which is not in actuator nor in sensor list")
+                self.last_state = msg["state"]
                 return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
                                                     "msg": "component identifier never occurred during training"}}
+        self.last_state = msg["state"]
 
+        print("Check rules")
         # check msg against rules
         for rule in self.rule_list:
             check = True
