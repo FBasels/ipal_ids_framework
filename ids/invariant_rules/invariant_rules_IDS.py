@@ -22,6 +22,7 @@ class InvariantRulesIDS(MetaIDS):
         "max_k": 4,
         "max_comp": 4,   # number of mixture components
         "negated_states": 1,    # 1: create actuator predicates =x and !=x  -  0: only create actuator predicates =x
+        "merge_rules": 1,      # 1: combines rules with the same premises
 
         # List of component identifiers. Separated in lists containing components of different parts. Here keyArray for SWaT
         "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
@@ -438,24 +439,41 @@ class InvariantRulesIDS(MetaIDS):
             myfile.close()
 
         # INFO used for model storage
-        for i in range(1, len(keyArray) + 1):
-            for rule in phase_dict[i]:
-                rule = rule.split(" ---> ")
-                prem = rule[0].split(" and ")
-                prem = [x.strip() for x in prem]
-                conc = rule[1].split(" and ")
-                conc = [x.strip() for x in conc]
-                self.rule_list.append((prem, conc))
+        if self.settings["merge_rules"] == 1:
+            rules = {}
+            for i in range(1, len(keyArray) + 1):
+                for rule in phase_dict[i]:
+                    rule = rule.split(" ---> ")
+                    prem = rule[0].split(" and ")
+                    prem = [x.strip() for x in prem]
+                    prem.sort()
+                    prem = tuple(prem)
+                    if prem not in rules.keys():
+                        rules[prem] = set()
+                    conc = rule[1].split(" and ")
+                    conc = [x.strip() for x in conc]
+                    rules[prem].update(conc)
+            for prem in rules.keys():
+                self.rule_list.append((prem, list(rules[prem])))
+        else:
+            for i in range(1, len(keyArray) + 1):
+                for rule in phase_dict[i]:
+                    rule = rule.split(" ---> ")
+                    prem = rule[0].split(" and ")
+                    prem = [x.strip() for x in prem]
+                    conc = rule[1].split(" and ")
+                    conc = [x.strip() for x in conc]
+                    self.rule_list.append((prem, conc))
 
     def new_state_msg(self, msg: {}):
-        print("Current state message {}".format(msg))
+        # print("Current state message {}".format(msg))
         if not self.last_state:
             # TODO maybe check at least the actuators here?
             self.last_state = msg["state"]
             return False, {}
         states = dict(msg["state"])
 
-        print("Preprocessing states")
+        # print("Preprocessing states")
         # preprocess msg
         for s in msg["state"]:
             if s in self.actuators:
@@ -473,7 +491,7 @@ class InvariantRulesIDS(MetaIDS):
                 update = np.array(self.last_state[s] - states[s]).reshape(-1, 1)
                 gmm = self.gmm_models[s + "_update"][0]
                 pred = gmm.predict(update)
-                states[s + "_update_cluster=" + str(pred)] = 1
+                states[s + "_update_cluster=" + str(pred[0])] = 1
                 score = gmm.score_samples(update)
                 threshold = self.gmm_models[s + "_update"][1]
                 if score < threshold:   # does not belong to one of the mixture components of this sensor
@@ -488,7 +506,7 @@ class InvariantRulesIDS(MetaIDS):
                                                     "msg": "component identifier never occurred during training"}}
         self.last_state = msg["state"]
 
-        print("Check rules")
+        # print("Check rules")
         # check msg against rules
         for rule in self.rule_list:
             check = True
@@ -499,7 +517,7 @@ class InvariantRulesIDS(MetaIDS):
                     if pred not in states:
                         check = False
                         break
-                elif "=" or "!=" in pred:
+                elif "=" in pred or "!=" in pred:
                     # actuator, check states
                     if states[pred] == 0:
                         check = False
@@ -509,17 +527,17 @@ class InvariantRulesIDS(MetaIDS):
                     pred = pred.split("<")
                     if len(pred) == 3:
                         # predicate defines upper and lower bound, check both
-                        if states[pred[1]] <= pred[0] or states[pred[1]] >= pred[2]:
+                        if states[pred[1]] <= float(pred[0]) or states[pred[1]] >= float(pred[2]):
                             check = False
                             break
                     else:
-                        if states[pred[0]] >= pred[1]:
+                        if states[pred[0]] >= float(pred[1]):
                             check = False
                             break
                 elif ">" in pred:
                     # sensor value, check lower bound
                     pred = pred.split(">")
-                    if states[pred[0]] <= pred[1]:
+                    if states[pred[0]] <= float(pred[1]):
                         check = False
                         break
                 else:
@@ -536,7 +554,7 @@ class InvariantRulesIDS(MetaIDS):
                                                                                                "threshold": None,
                                                                                                "rule": rule,
                                                                                                "msg": "unsatisfied rule"}}
-                    elif "=" or "!=" in pred:
+                    elif "=" in pred or "!=" in pred:
                         # actuator value, check state
                         if states[pred] == 0:
                             return True, {"state": pred.split("=")[0], "alert": {"gmm_score": None,
@@ -548,13 +566,13 @@ class InvariantRulesIDS(MetaIDS):
                         pred = pred.split("<")
                         if len(pred) == 3:
                             # predicate defines upper and lower bound, check both
-                            if states[pred[1]] <= pred[0] or states[pred[1]] >= pred[2]:
+                            if states[pred[1]] <= float(pred[0]) or states[pred[1]] >= float(pred[2]):
                                 return True, {"state": pred[1], "alert": {"gmm_score": None,
                                                                           "threshold": None,
                                                                           "rule": rule,
                                                                           "msg": "unsatisfied rule"}}
                         else:
-                            if states[pred[0]] >= pred[1]:
+                            if states[pred[0]] >= float(pred[1]):
                                 return True, {"state": pred[0], "alert": {"gmm_score": None,
                                                                           "threshold": None,
                                                                           "rule": rule,
@@ -562,7 +580,7 @@ class InvariantRulesIDS(MetaIDS):
                     elif ">" in pred:
                         # sensor value, check lower bound
                         pred = pred.split(">")
-                        if states[pred[0]] <= pred[1]:
+                        if states[pred[0]] <= float(pred[1]):
                             return True, {"state": pred[0], "alert": {"gmm_score": None,
                                                                       "threshold": None,
                                                                       "rule": rule,
@@ -571,7 +589,7 @@ class InvariantRulesIDS(MetaIDS):
                         settings.logger.critical("Invalid rule found. Conclusion {} invalid in rule {}".format(pred, rule))
                         break
 
-            return False, {}
+        return False, {}
 
     def save_trained_model(self):
         if self.settings["model-file"] is None:
