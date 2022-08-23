@@ -20,14 +20,61 @@ class InvariantRulesIDS(MetaIDS):
         "theta_value": 0.08,  # same as in the paper
         "gamma_value": 0.9,  # same as in the paper
         "max_k": 4,
-        "max_comp": 4,   # number of mixture components
-        "negated_states": 1,    # 1: create actuator predicates =x and !=x  -  0: only create actuator predicates =x
+        "max_comp": 4,   # number of mixture components TODO: rename/change here, because the real number of max components is currently max_comp-1
+        "negated_states": 0,    # 1: create actuator predicates =x and !=x  -  0: only create actuator predicates =x
         "merge_rules": 1,      # 1: combines rules with the same premises
 
         # List of component identifiers. Separated in lists containing components of different parts. Here keyArray for SWaT
-        "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
-          ['DPIT301','FIT301','LIT301','MV301','MV302','MV303','MV304','P301','P302'], ['AIT401','AIT402','FIT401','LIT401','P401','P402','P403','P404','UV401'],
-          ['AIT501','AIT502','AIT503','AIT504','FIT501','FIT502','FIT503','FIT504','P501','P502','PIT501','PIT502','PIT503'],['FIT601','P601','P602','P603']]
+        ###
+        # SWAT
+        ###
+        # "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
+        #   ['DPIT301','FIT301','LIT301','MV301','MV302','MV303','MV304','P301','P302'], ['AIT401','AIT402','FIT401','LIT401','P401','P402','P403','P404','UV401'],
+        #   ['AIT501','AIT502','AIT503','AIT504','FIT501','FIT502','FIT503','FIT504','P501','P502','PIT501','PIT502','PIT503'],['FIT601','P601','P602','P603']],
+        # "actuators": []
+        ###
+        # WADI
+        ###
+        "keyArray": [['1_AIT_001_PV','1_AIT_002_PV','1_AIT_003_PV','1_AIT_004_PV','1_AIT_005_PV','1_FIT_001_PV','1_LS_001_AL','1_LS_002_AL','1_LT_001_PV','1_MV_001_STATUS',
+              '1_MV_002_STATUS','1_MV_003_STATUS','1_MV_004_STATUS','1_P_001_STATUS','1_P_002_STATUS','1_P_003_STATUS','1_P_004_STATUS','1_P_005_STATUS','1_P_006_STATUS'],
+            ['2_DPIT_001_PV','2_FIC_101_CO','2_FIC_101_PV','2_FIC_101_SP','2_FIC_201_CO','2_FIC_201_PV','2_FIC_201_SP','2_FIC_301_CO','2_FIC_301_PV','2_FIC_301_SP',
+             '2_FIC_401_CO','2_FIC_401_PV','2_FIC_401_SP','2_FIC_501_CO','2_FIC_501_PV','2_FIC_501_SP','2_FIC_601_CO','2_FIC_601_PV','2_FIC_601_SP','2_FIT_001_PV','2_FIT_002_PV',
+             '2_FIT_003_PV','2_FQ_101_PV','2_FQ_201_PV','2_FQ_301_PV','2_FQ_401_PV','2_FQ_501_PV','2_FQ_601_PV','2_LS_001_AL','2_LS_002_AL','2_LS_101_AH','2_LS_101_AL','2_LS_201_AH',
+             '2_LS_201_AL','2_LS_301_AH','2_LS_301_AL','2_LS_401_AH','2_LS_401_AL','2_LS_501_AH','2_LS_501_AL','2_LS_601_AH','2_LS_601_AL','2_LT_001_PV','2_LT_002_PV','2_MCV_007_CO',
+             '2_MCV_101_CO','2_MCV_201_CO','2_MCV_301_CO','2_MCV_401_CO','2_MCV_501_CO','2_MCV_601_CO','2_MV_001_STATUS','2_MV_002_STATUS','2_MV_003_STATUS','2_MV_004_STATUS','2_MV_005_STATUS',
+             '2_MV_006_STATUS','2_MV_009_STATUS','2_MV_101_STATUS','2_MV_201_STATUS','2_MV_301_STATUS','2_MV_401_STATUS','2_MV_501_STATUS','2_MV_601_STATUS','2_P_001_STATUS',
+             '2_P_002_STATUS','2_P_003_SPEED','2_P_003_STATUS','2_P_004_SPEED','2_P_004_STATUS','2_PIC_003_CO','2_PIC_003_PV','2_PIC_003_SP','2_PIT_001_PV','2_PIT_002_PV','2_PIT_003_PV',
+             '2_SV_101_STATUS','2_SV_201_STATUS','2_SV_301_STATUS','2_SV_401_STATUS','2_SV_501_STATUS','2_SV_601_STATUS','2A_AIT_001_PV','2A_AIT_002_PV','2A_AIT_003_PV','2A_AIT_004_PV',
+             '2B_AIT_001_PV','2B_AIT_002_PV','2B_AIT_003_PV','2B_AIT_004_PV'],
+            ['3_AIT_001_PV','3_AIT_002_PV','3_AIT_003_PV','3_AIT_004_PV','3_AIT_005_PV','3_FIT_001_PV','3_LS_001_AL','3_LT_001_PV','3_MV_001_STATUS','3_MV_002_STATUS','3_MV_003_STATUS',
+             '3_P_001_STATUS','3_P_002_STATUS','3_P_003_STATUS','3_P_004_STATUS','LEAK_DIFF_PRESSURE','PLANT_START_STOP_LOG','TOTAL_CONS_REQUIRED_FLOW']],
+        "actuators": ['Row', '1_LS_001_AL', '1_LS_002_AL', '1_MV_001_STATUS', '1_MV_002_STATUS', '1_MV_003_STATUS',
+                      '1_MV_004_STATUS', '1_P_001_STATUS', '1_P_002_STATUS', '1_P_003_STATUS', '1_P_004_STATUS',
+                      '1_P_005_STATUS', '1_P_006_STATUS', '2_LS_101_AH', '2_LS_101_AL', '2_LS_201_AH', '2_LS_201_AL',
+                      '2_LS_301_AH', '2_LS_301_AL', '2_LS_401_AH', '2_LS_401_AL', '2_LS_501_AH', '2_LS_501_AL',
+                      '2_LS_601_AH', '2_LS_601_AL', '2_MCV_007_CO', '2_MV_001_STATUS', '2_MV_002_STATUS',
+                      '2_MV_003_STATUS', '2_MV_004_STATUS', '2_MV_005_STATUS', '2_MV_006_STATUS', '2_MV_009_STATUS',
+                      '2_MV_101_STATUS', '2_MV_201_STATUS', '2_MV_301_STATUS', '2_MV_401_STATUS', '2_MV_501_STATUS',
+                      '2_MV_601_STATUS', '2_P_003_STATUS', '2_P_004_STATUS', '2_PIC_003_SP', '2_SV_101_STATUS',
+                      '2_SV_201_STATUS', '2_SV_301_STATUS', '2_SV_401_STATUS', '2_SV_501_STATUS', '2_SV_601_STATUS',
+                      '3_LS_001_AL', '3_MV_001_STATUS', '3_MV_002_STATUS', '3_MV_003_STATUS', '3_P_001_STATUS',
+                      '3_P_002_STATUS', '3_P_003_STATUS', '3_P_004_STATUS', 'PLANT_START_STOP_LOG'] # list to specify actuators. Optional, but necessary if actuator values are specified as np.float64 TODO would it be possible to distinguish actuators and sensors if both have np.float64 type?
+        ###
+        # HAI
+        ###
+        # "keyArray" : [['P1_B2004', 'P1_B2016', 'P1_B3004', 'P1_B3005', 'P1_B4002', 'P1_B4005', 'P1_B400B', 'P1_B4022',
+        #                'P1_FCV01D','P1_FCV01Z', 'P1_FCV02D', 'P1_FCV02Z', 'P1_FCV03D', 'P1_FCV03Z', 'P1_FT01',
+        #                'P1_FT01Z', 'P1_FT02', 'P1_FT02Z','P1_FT03', 'P1_FT03Z', 'P1_LCV01D', 'P1_LCV01Z', 'P1_LIT01',
+        #                'P1_PCV01D', 'P1_PCV01Z', 'P1_PCV02D','P1_PCV02Z', 'P1_PIT01', 'P1_PIT02', 'P1_PP01AD',
+        #                'P1_PP01AR', 'P1_PP01BD', 'P1_PP01BR', 'P1_PP02D','P1_PP02R', 'P1_STSP', 'P1_TIT01', 'P1_TIT02'],
+        #               ['P2_24Vdc', 'P2_ASD', 'P2_AutoGO', 'P2_CO_rpm', 'P2_Emerg', 'P2_HILout', 'P2_MSD', 'P2_ManualGO',
+        #                'P2_OnOff',' P2_RTR', 'P2_SIT01', 'P2_SIT02', 'P2_TripEx', 'P2_VT01', 'P2_VTR01', 'P2_VTR02',
+        #                'P2_VTR03', 'P2_VTR04','P2_VXT02', 'P2_VXT03', 'P2_VYT02', 'P2_VYT03'],
+        #               ['P3_FIT01', 'P3_LCP01D', 'P3_LCV01D', 'P3_LH', 'P3_LIT01', 'P3_LL', 'P3_PIT01'],
+        #               ['P4_HT_FD', 'P4_HT_LD', 'P4_HT_PO', 'P4_HT_PS', 'P4_LD', 'P4_ST_FD', 'P4_ST_GOV', 'P4_ST_LD',
+        #                'P4_ST_PO', 'P4_ST_PS', 'P4_ST_PT01', 'P4_ST_TT01']],
+        # "actuators": []
+
     }
 
     def __init__(self, name=None):
@@ -85,9 +132,9 @@ class InvariantRulesIDS(MetaIDS):
             self.gmm_models[entry] = (gmm, model[entry]["threshold"])
 
     def distr_driven_pred(self, training_data: pd.DataFrame, cont_vars: []):
-        print("Generating distribution-driven predicates...")
+        settings.logger.info("Generating distribution-driven predicates...")
         for entry in cont_vars:
-            print('generate distribution-driven predicates for', entry)
+            settings.logger.debug("Generate distribution-driven predicates for {}".format(entry))
             X = training_data[entry].values
             X = X.reshape(-1, 1)  # INFO create list from row of values
             lowest_bic = np.infty
@@ -114,13 +161,13 @@ class InvariantRulesIDS(MetaIDS):
 
     def event_driven_pred(self, training_data: pd.DataFrame, cont_vars: [], disc_vars: [], max_dict: {}, min_dict: {},
                           entry_trans_map: {}):
-        print("Generating event-driven predicates...")
+        settings.logger.info("Generating event-driven predicates...")
         invar_dict = {}  # INFO contains as key unrelated sensor values and as values intercept value +/- max_error, so that this value lies in [0,1]
         for entry in disc_vars:  # INFO iterate over the label of discrete states
-            print('generate event-driven predicates for', entry)
+            settings.logger.debug("Generate event-driven predicates for {}".format(entry))
             for roundi in range(0, len(entry_trans_map[entry])):
                 trans = entry_trans_map[entry].pop()
-                print('round: ' + str(roundi) + ' - shift: ' + trans)
+                settings.logger.debug("Round: {} - Shift: {}".format(roundi, trans))
                 tempt_data = training_data.copy()
                 tempt_data[entry] = 0
 
@@ -162,7 +209,7 @@ class InvariantRulesIDS(MetaIDS):
                                 invar_entry = Util.conInvarEntry(target_var, lgRegr.intercept_ - max_error, '<',
                                                                  max_dict, min_dict, lgRegr.coef_,
                                                                  active_vars)  # INFO create label
-                                print("--- DEBUG: related sensors: label {}".format(invar_entry))
+                                settings.logger.debug("Related sensors: label {}".format(invar_entry))
                                 training_data[invar_entry] = 0
                                 training_data.loc[training_data[target_var] < lgRegr.intercept_ - max_error,
                                                   invar_entry] = 1  # INFO insert 1 whenever the current sensor has a lover vale than intercept - error
@@ -213,26 +260,37 @@ class InvariantRulesIDS(MetaIDS):
     def train(self, ipal=None, state=None):
         training_data = []
 
-        print("Reading training data...")
+        settings.logger.info("Reading training data...")
         with self._open_file(state) as f:
             for line in f.readlines():
                 curr = json.loads(line)
                 training_data.append(curr["state"])
         training_data = pd.DataFrame.from_dict(training_data)
         training_data.reset_index(drop=True, inplace=True)
-
-        print("Generating predicates...")
-        # preparation for distribution driven
-        cont_vars = []
         training_data.fillna(method='ffill', inplace=True)
         for entry in training_data:
+            if training_data[entry].isnull().values.all():
+                training_data.drop(entry, axis=1, inplace=True)
+
+
+        settings.logger.info("Generating predicates...")
+        # preparation for distribution driven
+        cont_vars = []
+        convert = {}
+        for entry in training_data:
             if training_data[entry].dtypes == np.float64:
+                if entry in self.settings["actuators"]:
+                    convert[entry] = np.int64
                 max_value = training_data[entry].max()
                 min_value = training_data[entry].min()
                 if max_value != min_value:
                     training_data[entry + '_update'] = training_data[entry].shift(-1) - training_data[entry]
                     cont_vars.append(entry + '_update')
                     self.sensors.append(entry)
+            elif training_data[entry].dtypes == np.int64 and len(training_data[entry].values) > 10:
+                convert[entry] = np.float64
+        training_data = training_data.astype(convert)
+
         # remove last row, due to NaNs in _update entries
         training_data = training_data[:len(training_data)-1]
 
@@ -303,27 +361,6 @@ class InvariantRulesIDS(MetaIDS):
                                 training_data[entry + "!=" + str(v)] = 0
                                 training_data.loc[training_data[entry] != v, entry + "!=" + str(v)] = 1
                         training_data.drop(entry, axis=1, inplace=True)
-                    #
-                    #
-                    #
-                    # elif len(newdf.columns.values.tolist()) == 2:  # INFO case: exactly two entries
-                    #     disc_vars.append(entry)
-                    #     training_data[entry + '_shift'] = training_data[entry].shift(-1).fillna(method='ffill').astype(
-                    #         int).astype(str) + '->' + training_data[entry].astype(int).astype(str)
-                    #     onehot_entries[entry] = newdf.columns.values.tolist()   # INFO: add one-hot encoding of both states AND entry_shift with the transition of the states
-                    #     training_data = pd.concat([training_data, newdf], axis=1)
-                    #     training_data.drop(entry, axis=1, inplace=True)
-                    # else:  # INFO case: more than two entries/states (only covers two states here)
-                    #     disc_vars.append(entry)
-                    #     training_data[entry + '_shift'] = training_data[entry].shift(-1).fillna(method='ffill').astype(
-                    #         int).astype(str) + '->' + training_data[entry].astype(int).astype(str)
-                    #
-                    #     training_data[entry + '!=1'] = 1
-                    #     training_data.loc[training_data[entry] == 1, entry + '!=1'] = 0
-                    #
-                    #     training_data[entry + '!=2'] = 1
-                    #     training_data.loc[training_data[entry] == 2, entry + '!=2'] = 0
-                    #     training_data.drop(entry, axis=1, inplace=True)
 
         self.event_driven_pred(training_data, cont_vars, disc_vars, max_dict, min_dict, entry_trans_map)
 
@@ -332,33 +369,33 @@ class InvariantRulesIDS(MetaIDS):
         with open("./my_tests/data/dead_entries_after_event_normal.json", 'w') as f:
             json.dump(dead_entries, f)
         self.intermediate_model_saving("gmm_and_regression")
-        # reading intermediate results
+        # # reading intermediate results
         # training_data = pd.read_csv("./my_tests/data/after_event_normal.csv")
         # with open("./my_tests/data/dead_entries_after_event_normal.json", 'r') as f:
         #     dead_entries = json.load(f)
         # self.restore_intermediate_model("gmm_and_regression")
 
-        print("Start rule mining...")
-        print('Gamma=' + str(self.settings["gamma_value"]) + ', theta=' + str(self.settings["theta_value"]))
+        settings.logger.info("Start rule mining...")
+        settings.logger.info('Gamma=' + str(self.settings["gamma_value"]) + ', theta=' + str(self.settings["theta_value"]))
         # mode 0
         keyArray = self.settings["keyArray"]
         start_time = time.time()
         rule_list_0, item_dict_0 = Util.getRules(training_data, dead_entries, keyArray,
                                                  mode=0, gamma=self.settings["gamma_value"],
                                                  max_k=self.settings["max_k"], theta=self.settings["theta_value"])
-        print('finish mode 0')
-        print('mode 0 time cost: ' + str((time.time() - start_time) * 1.0 / 60))
+        settings.logger.debug('finish mode 0')
+        settings.logger.debug('mode 0 time cost: ' + str((time.time() - start_time) * 1.0 / 60))
 
         #mode 2 is quite costly, use mode 1 if want to save time
         start_time_2 = time.time()
         rule_list_1, item_dict_1 = Util.getRules(training_data, dead_entries, keyArray,
                                                  mode=2, gamma=self.settings["gamma_value"],
                                                  max_k=self.settings["max_k"], theta=self.settings["theta_value"])
-        print('finish mode 2')
+        settings.logger.debug('finish mode 2')
         end_time = time.time()
         time_cost = (end_time - start_time) * 1.0 / 60
-        print('mode 2 time cost: ' + str((end_time - start_time_2) * 1.0 / 60))
-        print('rule mining time cost: ' + str(time_cost))
+        settings.logger.debug('mode 2 time cost: ' + str((end_time - start_time_2) * 1.0 / 60))
+        settings.logger.info('rule mining time cost: ' + str(time_cost))
 
         # INFO I guess in the following, rules are filtered if they have no distribution-driven predicate. Remember this is done only for rules generated by mode 2
         rules = []
@@ -377,7 +414,7 @@ class InvariantRulesIDS(MetaIDS):
                 rules.append(rule)
         rule_list_1 = rules
 
-        print('rule count: ' + str(len(rule_list_0) + len(rule_list_1)))
+        settings.logger.info('rule count: ' + str(len(rule_list_0) + len(rule_list_1)))
 
         # INFO the following is just for inspecting the rules afterwards by printing it to a file
         # arrange rules based on phase of testbed
@@ -466,14 +503,14 @@ class InvariantRulesIDS(MetaIDS):
                     self.rule_list.append((prem, conc))
 
     def new_state_msg(self, msg: {}):
-        # print("Current state message {}".format(msg))
+        settings.logger.debug("Current state message {}".format(msg))
         if not self.last_state:
             # TODO maybe check at least the actuators here?
             self.last_state = msg["state"]
             return False, {}
         states = dict(msg["state"])
 
-        # print("Preprocessing states")
+        settings.logger.debug("Preprocessing states")
         # preprocess msg
         for s in msg["state"]:
             if s in self.actuators:
@@ -500,13 +537,13 @@ class InvariantRulesIDS(MetaIDS):
                                                         "msg": "sensor update never occurred during training"}}
             else:
                 # TODO: how to handle components that have only one value and thus are dropped during training?
-                print("State contains component which is not in actuator nor in sensor list")
+                settings.logger.info("State contains component which is not in actuator nor in sensor list")
                 self.last_state = msg["state"]
                 return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
                                                     "msg": "component identifier never occurred during training"}}
         self.last_state = msg["state"]
 
-        # print("Check rules")
+        settings.logger.debug("Check rules")
         # check msg against rules
         for rule in self.rule_list:
             check = True

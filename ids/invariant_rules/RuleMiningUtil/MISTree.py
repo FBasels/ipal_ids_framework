@@ -4,6 +4,7 @@ Created on 16 Aug 2017
 @author: cf1510
 '''
 from .Element import TreeNode, TableEntry
+import ipal_iids.settings as settings
 
 # the structure of a node (item_name, item_count, child-links, node-link)
 
@@ -75,18 +76,12 @@ def genMIS_tree(dataset, item_count_dict, min_sup):
     
     "Construct tree"
     for transaction in dataset:
-#         print(list(transaction))
         item_mis_tuples = []
         for item in transaction:
-#             print(item)
             im_tuple = (item, min_sup[item])
             item_mis_tuples.append(im_tuple)
-#         print(item_mis_tuples)
         item_mis_tuples.sort(key=lambda tup: (tup[1],tup[0]),reverse=True)
         insertTree(item_mis_tuples, root, MIN_freq_item_header_table)
-#     printTree(root)
-#     print(MIN_freq_item_header_table)
-#     printTable(MIN_freq_item_header_table)    
     
     "Prune tree"
     min_value = 9999999
