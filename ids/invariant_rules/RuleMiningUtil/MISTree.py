@@ -4,13 +4,13 @@ Created on 16 Aug 2017
 @author: cf1510
 '''
 from .Element import TreeNode, TableEntry
-import ipal_iids.settings as settings
 
 # the structure of a node (item_name, item_count, child-links, node-link)
 
-
+"""
+    count items in the dataset
+"""
 def count_items(dataset):
-    "count items in the dataset."
     item_count_dict = {}
     for transaction in dataset:
         for item in transaction:
@@ -18,11 +18,13 @@ def count_items(dataset):
                 item_count_dict[item] += 1
             else:
                 item_count_dict[item] = 1
-
     return item_count_dict
 
+
+"""
+    insert new node into the tree
+"""
 def insertTree(item_mis_tuples, root, MIN_freq_item_header_table):
-    "insert_tree."
     node = root
     for item_mis_tuple in item_mis_tuples:
         item = item_mis_tuple[0]
@@ -45,10 +47,12 @@ def insertTree(item_mis_tuples, root, MIN_freq_item_header_table):
                 nodelink.node_link = new_node
             node = new_node
 
+
 def printTree(root):
     print(' ')
     print('print tree')
     print(root)
+
 
 def printTable(MIN_freq_item_header_table, converted=False):
     print( ' ' )
@@ -70,19 +74,20 @@ def printTable(MIN_freq_item_header_table, converted=False):
                 nodelink = nodelink.node_link
             print(str_tempt)
 
+
 def genMIS_tree(dataset, item_count_dict, min_sup):
     root = TreeNode(0,0,None,[],None)
     MIN_freq_item_header_table = {}
-    
+
     "Construct tree"
     for transaction in dataset:
         item_mis_tuples = []
         for item in transaction:
             im_tuple = (item, min_sup[item])
             item_mis_tuples.append(im_tuple)
-        item_mis_tuples.sort(key=lambda tup: (tup[1],tup[0]),reverse=True)
+        item_mis_tuples.sort(key=lambda tup: (tup[1],tup[0]), reverse=True)
         insertTree(item_mis_tuples, root, MIN_freq_item_header_table)
-    
+
     "Prune tree"
     min_value = 9999999
     for item in min_sup:
@@ -104,25 +109,13 @@ def genMIS_tree(dataset, item_count_dict, min_sup):
                     child.parent_link = node.parent_link
             node = node.node_link
         del MIN_freq_item_header_table[item]
-    
-#     printTree(root)
-#     printTable(MIN_freq_item_header_table)
-#     print(MIN_freq_item_header_table)
+
     MIN_freq_item_header_dict = MIN_freq_item_header_table
     
     MIN_freq_item_header_table = list(MIN_freq_item_header_table.values())
     MIN_freq_item_header_table.sort(key=lambda x: (x.min_freq, x.item))
-#     printTable(MIN_freq_item_header_table, converted = True)
-    
     return root, MIN_freq_item_header_table, min_value, MIN_freq_item_header_dict
-    
-#     print "Merge trees"
-#     for entry in MIN_freq_item_header_table:
-#         node = MIN_freq_item_header_table[entry].node_link
-#         while node.node_link != None:
-#             if node.parent_link == node.node_link.parent_link:
-#                 node.parent_link.child_links.remove(node.node_link)
-#                 if n
+
 
 def insert_prefix_path(prefix_path, root, MIN_freq_item_header_table, min_sup):
     node = root
@@ -153,8 +146,7 @@ def genConditional_MIS_tree(conditional_pattern_base, base_pattern, MIS, min_sup
     root = TreeNode(0,0,None,[],None)
     MIN_freq_item_header_table = {}
     conditional_frequent_patterns = []
-    
-#     print "Construct conditional tree for base pattern " + str(base_pattern)
+
     for prefix_path in conditional_pattern_base:
         insert_prefix_path(prefix_path, root, MIN_freq_item_header_table, min_sup)
     
@@ -170,16 +162,11 @@ def genConditional_MIS_tree(conditional_pattern_base, base_pattern, MIS, min_sup
             new_pattern = list(base_pattern)
             new_pattern.append(item)
             pattern_count_dict[frozenset(new_pattern)] = count
-#             print new_pattern
-#             print count
         else:
             new_pattern = list(base_pattern)
             new_pattern.append(item)
-#             print new_pattern
             conditional_frequent_patterns.append(new_pattern)
             pattern_count_dict[frozenset(new_pattern)] = count
-#             print new_pattern
-#             print count
     
     for item in pruning_items:
         node = MIN_freq_item_header_table[item].node_link
@@ -198,6 +185,7 @@ def genConditional_MIS_tree(conditional_pattern_base, base_pattern, MIS, min_sup
     
     return root, MIN_freq_item_header_table, conditional_frequent_patterns
 
+
 def CP_growth(tree, header_table, base_pattern, MIS, min_sup, freq_patterns, pattern_count_dict, max_k):
     for entry in header_table:
         node = entry.node_link
@@ -212,19 +200,17 @@ def CP_growth(tree, header_table, base_pattern, MIS, min_sup, freq_patterns, pat
             prefix_tree.reverse()
             conditional_pattern_base.append(prefix_tree)
             node = node.node_link
-        
-#         print conditional_pattern_base
+
         new_base_pattern = list(base_pattern)
         new_base_pattern.append(entry.item)
         new_tree, new_header_table, conditional_frequent_patterns = genConditional_MIS_tree(conditional_pattern_base, new_base_pattern, MIS,  min_sup, pattern_count_dict)
-#         print 'print tree for base pattern ' + str(new_base_pattern)
-#         printTree(new_tree)
 
         freq_patterns.extend(conditional_frequent_patterns)
         
         if len(new_header_table) > 0 and len(new_base_pattern) < max_k:
             CP_growth(new_tree, new_header_table, new_base_pattern, MIS,min_sup,freq_patterns, pattern_count_dict, max_k)
-         
+
+
 def CFP_growth(root, MIN_freq_item_header_table, min_sup, max_k):
     freq_patterns = []
     pattern_count_dict = {}
@@ -241,11 +227,8 @@ def CFP_growth(root, MIN_freq_item_header_table, min_sup, max_k):
             prefix_tree.reverse()
             conditional_pattern_base.append(prefix_tree)
             node = node.node_link 
-        
-#         print conditional_pattern_base
+
         tree, header_table, conditional_frequent_patterns = genConditional_MIS_tree(conditional_pattern_base, [entry.item], entry.min_freq,  min_sup, pattern_count_dict)
-#         print 'print tree for base pattern ' + str(entry.item)
-#         printTree(tree)
         freq_patterns.extend(conditional_frequent_patterns)
         
         if len(header_table) > 0 and max_k>1:
