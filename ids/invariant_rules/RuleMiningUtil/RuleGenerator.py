@@ -4,11 +4,110 @@ Created on 30 Aug 2017
 @author: cf1510
 '''
 
-def filterClosedPatterns(freq_patterns, support_data, item_count_dict, max_k, MIN):
+from multiprocessing import Process, Pipe
+import numpy as np
+import ipal_iids.settings as settings
+
+
+def subfilter(LPrev, LNext, support_data, pipe, split=False):
+    if split and (len(LPrev) > 100000 or len(LNext) > 1000000):
+        try:
+            closedLI = []
+            # setting up subprocesses
+            LPrev = np.array_split(LPrev, 4)
+            proc = []
+            pipes = []
+            for i in range(0, 3):
+                proc.append(None)
+                pipes.append(None)
+            for i in range(1, 4):
+                rec, send = Pipe()
+                pipes[i - 1] = rec
+                proc[i - 1] = Process(target=subfilter, args=(frozenset(LPrev[i - 1]), LNext, support_data, send))
+                proc[i - 1].start()
+            # calculate
+            for childSet in frozenset(LPrev[0]):    # do not ask why we use the first and not the last element of the array, although the last should be the smallest. It was faster everytime we tried it that way...
+                valid = True
+                for parentSet in LNext:
+                    if childSet.issubset(parentSet) and support_data[childSet] == support_data[parentSet]:
+                        valid = False
+                        break
+                if valid == True:
+                    closedLI.append(childSet)
+            # collecting results from subprocesses
+            for i in range(0, len(pipes)):
+                rec = pipes[i].recv()
+                if type(rec) is list:
+                    closedLI.extend(rec)
+                else:
+                    pipe.send(rec)
+                    exit()
+            pipe.send(closedLI)
+        except Exception as e:
+            pipe.send(e)
+    else:
+        try:
+            closedLI = []
+            for childSet in LPrev:
+                valid = True
+                for parentSet in LNext:
+                    if childSet.issubset(parentSet) and support_data[childSet] == support_data[parentSet]:
+                        valid = False
+                        break
+                if valid == True:
+                    closedLI.append(childSet)
+            pipe.send(closedLI)
+        except Exception as e:
+            pipe.send(e)
+
+
+"""
+    Filter freq_patterns for closed frequent patterns. Making use of multiprocessing
+"""
+def filterClosedPatternsParallel(freq_patterns, support_data, item_count_dict, max_k, MIN):
+    L = []
+    for i in range(max_k + 1):
+        L.append([])
+
+    for item in item_count_dict:
+        if item_count_dict[item] >= MIN:
+            key = frozenset([item])
+            support_data[key] = item_count_dict[item]
+            L[0].append(key)
+
+    for pattern in freq_patterns:
+        L[len(pattern) - 1].append(frozenset(pattern))
+
+    proc = []
+    pipes = []
+    for i in range(0, len(L) - 1):
+        proc.append(None)
+        pipes.append(None)
+    closedL = []
+    for i in range(0, len(L) - 1):
+        rec, send = Pipe()
+        pipes[i] = rec
+        proc[i] = Process(target=subfilter, args=(L[i], L[i + 1], support_data, send, True))
+        proc[i].start()
+        settings.logger.debug("Startet process {} with pid {} ".format(i, proc[i].pid))
+    for i in range(0, len(pipes)):
+        rec = pipes[i].recv()
+        settings.logger.debug("Successfully read from process {}".format(proc[i].pid))
+        if type(rec) is list:
+            closedL.append(rec)
+        else:
+            settings.logger.critical("Subprocess crashed and send back: {}".format(rec))
+    closedL.append(L[len(L) - 1])
+    return closedL
+
+
+"""
+    Filter freq_patterns for closed frequent patterns.
+"""
+def filterClosedPatternsSeq(freq_patterns, support_data, item_count_dict, max_k, MIN):
     L = []
     for i in range(max_k+1):
         L.append([])
-    
       
     for item in item_count_dict:
         if item_count_dict[item] >= MIN:
@@ -37,12 +136,13 @@ def filterClosedPatterns(freq_patterns, support_data, item_count_dict, max_k, MI
     return closedL 
 
 
-def generateRules(L, support_data, MIN_freq_item_header_table,min_sup,  min_confidence=1):
-    """Create the association rules
+"""
+    Create the association rules
     L: list of frequent item sets
     support_data: support data for those itemsets
     min_confidence: minimum confidence threshold
-    """
+"""
+def generateRules(L, support_data, MIN_freq_item_header_table,min_sup,  min_confidence=1):
     rules = []
     for i in range(1, len(L)):
         for freqSet in L[i]:
@@ -83,6 +183,7 @@ def calculateSupportCount(MIN_freq_item_header_table,itemlist,min_sup):
                      
     return count 
 
+
 def calc_confidence(freqSet, H, support_data, rules, MIN_freq_item_header_table,min_sup, min_confidence=1):
     "Evaluate the rule generated"
     pruned_H = []
@@ -90,33 +191,17 @@ def calc_confidence(freqSet, H, support_data, rules, MIN_freq_item_header_table,
         if freqSet-conseq not in support_data:
             itemlist = list(freqSet - conseq)
             support_data[freqSet - conseq] = calculateSupportCount(MIN_freq_item_header_table,itemlist,min_sup)
-#         
-#         conf = support_data[freqSet] / support_data[freqSet - conseq]
-#         if conf >= min_confidence:
-#             rules.append((freqSet - conseq, conseq, conf))
-#             pruned_H.append(conseq)
-#         itemlist = list(freqSet)
-#         count = calculateSupportCount(MIN_freq_item_header_table,itemlist,min_sup)
-#         if count != support_data[freqSet]:
-#             print itemlist
-#             print 'count: ' + str(count) + ' support: ' + str(support_data[freqSet])
-#             
-#         itemlist = list(freqSet-conseq)
-#         count = calculateSupportCount(MIN_freq_item_header_table,itemlist,min_sup)
-#         if count != support_data[freqSet-conseq]:
-#             print itemlist
-#             print 'count: ' + str(count) + ' support: ' + str(support_data[freqSet-conseq])
-          
-#         if freqSet-conseq in support_data:
         conf = support_data[freqSet]*1.0 / support_data[freqSet - conseq]
         if conf >= min_confidence:
-#             print conf
             rules.append((freqSet - conseq, conseq, conf))
             pruned_H.append(conseq)
     return pruned_H
 
+
+"""
+    Generate the joint transactions from candidate sets
+"""
 def aprioriGen(freq_sets, k):
-    "Generate the joint transactions from candidate sets"
     retList = []
     lenLk = len(freq_sets)
     for i in range(lenLk):
@@ -130,8 +215,10 @@ def aprioriGen(freq_sets, k):
     return retList
 
 
+"""
+    Generate a set of candidate rules
+"""
 def rules_from_conseq(freqSet, H, support_data, rules, MIN_freq_item_header_table,min_sup, min_confidence=0.7):
-    "Generate a set of candidate rules"
     m = len(H[0])
     if (len(freqSet) > (m + 1)):
         Hmp1 = aprioriGen(H, m + 1)
