@@ -315,6 +315,9 @@ def live_idss(idss):
     _first_ipal_msg = True
     _first_state_msg = True
 
+    # ADDED for evaluation
+    time_costs = []
+
     while True:
         # load a new ipal message
         if ipal_msg is None and settings.live_ipal:
@@ -366,7 +369,11 @@ def live_idss(idss):
 
             for ids in idss:
                 if ids.requires("live.state"):
+                    # ADDED for evaluation
+                    s = time.time()
                     alert, metric = ids.new_state_msg(state_msg)
+                    time_costs.append(time.time()-s)
+
                     state_msg["ids"] = (
                         state_msg["ids"] or alert
                     )  # combine alerts with or (TODO config ?)
@@ -381,6 +388,9 @@ def live_idss(idss):
                 settings.outputfd.write(json.dumps(state_msg) + "\n")
                 settings.outputfd.flush()
             state_msg = None
+    # ADDED for evaluation
+    if len(time_costs) != 0:
+        settings.logger.info("Average time cost for validating message: {}".format(sum(time_costs) / len(time_costs)))
 
 
 def main():
