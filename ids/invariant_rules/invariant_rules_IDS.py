@@ -549,7 +549,7 @@ class InvariantRulesIDS(MetaIDS):
                                                         "msg": "sensor update never occurred during training"}}
             else:
                 # static components were removed during training. Check if this component is static
-                if self.last_state[s] != msg[s]:
+                if self.last_state[s] and msg[s] and self.last_state[s] != msg[s]:
                     settings.logger.info("State contains change component which was static during training")
                     self.last_state = msg["state"]
                     return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
