@@ -18,7 +18,7 @@ class InvariantRulesIDS(MetaIDS):
         "sigma": 1.1,  # buffer scaler
         "theta_value": 0.08,  # same as in the paper
         "gamma_value": 0.9,  # same as in the paper
-        "max_k": 4,  # maximal length of frequent item sets
+        "max_k": 4,  # maximal length of items in frequent item sets
         "max_comp": 4,  # number of mixture components
         "negated_states": 0,    # 1: create actuator predicates =x and !=x  -  0: only create actuator predicates =x
         "merge_rules": 1,      # 1: combines rules with the same premises to one
@@ -26,14 +26,14 @@ class InvariantRulesIDS(MetaIDS):
 
         # List of component identifiers. Separated in lists containing components of different parts. Here keyArray for SWaT
         # keyArray: list of components in the testbed, seperated into different parts of the testbed
-        # actuators: list of actuators in the testbed. Used to ensure that actuators are correctly handled
+        # (optional) actuators: list of actuators in the testbed. Used to ensure that actuators are correctly handled
         ###
         # SWAT
         ###
-        # "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
-        #   ['DPIT301','FIT301','LIT301','MV301','MV302','MV303','MV304','P301','P302'], ['AIT401','AIT402','FIT401','LIT401','P401','P402','P403','P404','UV401'],
-        #   ['AIT501','AIT502','AIT503','AIT504','FIT501','FIT502','FIT503','FIT504','P501','P502','PIT501','PIT502','PIT503'],['FIT601','P601','P602','P603']],
-        # "actuators": []
+        "keyArray": [['FIT101','LIT101','MV101','P101','P102'], ['AIT201','AIT202','AIT203','FIT201','MV201','P201','P202','P203','P204','P205','P206'],
+          ['DPIT301','FIT301','LIT301','MV301','MV302','MV303','MV304','P301','P302'], ['AIT401','AIT402','FIT401','LIT401','P401','P402','P403','P404','UV401'],
+          ['AIT501','AIT502','AIT503','AIT504','FIT501','FIT502','FIT503','FIT504','P501','P502','PIT501','PIT502','PIT503'],['FIT601','P601','P602','P603']],
+        "actuators": []
         ###
         # WADI
         ###
@@ -64,18 +64,19 @@ class InvariantRulesIDS(MetaIDS):
         ###
         # HAI
         ###
-        "keyArray": [['P1_B2004', 'P1_B2016', 'P1_B3004', 'P1_B3005', 'P1_B4002', 'P1_B4005', 'P1_B400B', 'P1_B4022',
-                       'P1_FCV01D','P1_FCV01Z', 'P1_FCV02D', 'P1_FCV02Z', 'P1_FCV03D', 'P1_FCV03Z', 'P1_FT01',
-                       'P1_FT01Z', 'P1_FT02', 'P1_FT02Z','P1_FT03', 'P1_FT03Z', 'P1_LCV01D', 'P1_LCV01Z', 'P1_LIT01',
-                       'P1_PCV01D', 'P1_PCV01Z', 'P1_PCV02D','P1_PCV02Z', 'P1_PIT01', 'P1_PIT02', 'P1_PP01AD',
-                       'P1_PP01AR', 'P1_PP01BD', 'P1_PP01BR', 'P1_PP02D','P1_PP02R', 'P1_STSP', 'P1_TIT01', 'P1_TIT02'],
-                      ['P2_24Vdc', 'P2_ASD', 'P2_AutoGO', 'P2_CO_rpm', 'P2_Emerg', 'P2_HILout', 'P2_MSD', 'P2_ManualGO',
-                       'P2_OnOff',' P2_RTR', 'P2_SIT01', 'P2_SIT02', 'P2_TripEx', 'P2_VT01', 'P2_VTR01', 'P2_VTR02',
-                       'P2_VTR03', 'P2_VTR04','P2_VXT02', 'P2_VXT03', 'P2_VYT02', 'P2_VYT03'],
-                      ['P3_FIT01', 'P3_LCP01D', 'P3_LCV01D', 'P3_LH', 'P3_LIT01', 'P3_LL', 'P3_PIT01'],
-                      ['P4_HT_FD', 'P4_HT_LD', 'P4_HT_PO', 'P4_HT_PS', 'P4_LD', 'P4_ST_FD', 'P4_ST_GOV', 'P4_ST_LD',
-                       'P4_ST_PO', 'P4_ST_PS', 'P4_ST_PT01', 'P4_ST_TT01']],
-        "actuators": []
+        # "keyArray": [['P1_B2004', 'P1_B2016', 'P1_B3004', 'P1_B3005', 'P1_B4002', 'P1_B4005', 'P1_B400B', 'P1_B4022',
+        #                'P1_FCV01D','P1_FCV01Z', 'P1_FCV02D', 'P1_FCV02Z', 'P1_FCV03D', 'P1_FCV03Z', 'P1_FT01',
+        #                'P1_FT01Z', 'P1_FT02', 'P1_FT02Z','P1_FT03', 'P1_FT03Z', 'P1_LCV01D', 'P1_LCV01Z', 'P1_LIT01',
+        #                'P1_PCV01D', 'P1_PCV01Z', 'P1_PCV02D','P1_PCV02Z', 'P1_PIT01', 'P1_PIT02', 'P1_PP01AD',
+        #                'P1_PP01AR', 'P1_PP01BD', 'P1_PP01BR', 'P1_PP02D','P1_PP02R', 'P1_STSP', 'P1_TIT01', 'P1_TIT02'],
+        #               ['P2_24Vdc', 'P2_ASD', 'P2_AutoGO', 'P2_CO_rpm', 'P2_Emerg', 'P2_HILout', 'P2_MSD', 'P2_ManualGO',
+        #                'P2_OnOff',' P2_RTR', 'P2_SIT01', 'P2_SIT02', 'P2_TripEx', 'P2_VT01', 'P2_VTR01', 'P2_VTR02',
+        #                'P2_VTR03', 'P2_VTR04','P2_VXT02', 'P2_VXT03', 'P2_VYT02', 'P2_VYT03'],
+        #               ['P3_FIT01', 'P3_LCP01D', 'P3_LCV01D', 'P3_LH', 'P3_LIT01', 'P3_LL', 'P3_PIT01'],
+        #               ['P4_HT_FD', 'P4_HT_LD', 'P4_HT_PO', 'P4_HT_PS', 'P4_LD', 'P4_ST_FD', 'P4_ST_GOV', 'P4_ST_LD',
+        #                'P4_ST_PO', 'P4_ST_PS', 'P4_ST_PT01', 'P4_ST_TT01']],
+        # "actuators": ["P1_PP01AD", "P1_PP01AR", "P1_PP01BD", "P1_PP01BR", "P1_PP02D", "P1_PP02R", "P1_STSP", "P2_AutoGO",
+        #     "P2_Emerg", "P2_ManualGO", "P2_OnOff", "P2_TripEx"]
 
     }
 
@@ -301,8 +302,8 @@ class InvariantRulesIDS(MetaIDS):
         self.distr_driven_pred(training_data, cont_vars)
 
         # saving intermediate results
-        training_data.to_csv("./my_tests/data/swat_after_distribution_normal.csv", index=False)
-        self.saving_intermediate_model("gaussian_mixture_models")
+        # training_data.to_csv("./my_tests/data/swat_after_distribution_normal.csv", index=False)
+        # self.saving_intermediate_model("gaussian_mixture_models")
         # # restore intermediate results
         # training_data = pd.read_csv("./my_tests/data/swat_after_distribution_normal.csv")
         # self.restore_intermediate_model("gaussian_mixture_models")
@@ -368,10 +369,10 @@ class InvariantRulesIDS(MetaIDS):
         self.event_driven_pred(training_data, cont_vars, disc_vars, max_dict, min_dict, entry_trans_map)
 
         # saving intermediate results
-        training_data.to_csv("./my_tests/data/after_event_normal.csv", index=False)
-        with open("./my_tests/data/dead_entries_after_event_normal.json", 'w') as f:
-            json.dump(dead_entries, f)
-        self.saving_intermediate_model("gmm_and_regression")
+        # training_data.to_csv("./my_tests/data/after_event_normal.csv", index=False)
+        # with open("./my_tests/data/dead_entries_after_event_normal.json", 'w') as f:
+        #     json.dump(dead_entries, f)
+        # self.saving_intermediate_model("gmm_and_regression")
         # # restoring intermediate results
         # training_data = pd.read_csv("./my_tests/data/after_event_normal.csv")
         # with open("./my_tests/data/dead_entries_after_event_normal.json", 'r') as f:
@@ -401,7 +402,7 @@ class InvariantRulesIDS(MetaIDS):
         settings.logger.debug('mode 2 time cost: ' + str((end_time - start_time_2) * 1.0 / 60))
         settings.logger.info('rule mining time cost: ' + str(time_cost))
 
-        # filter for rules that contain one distribution-driven predicate
+        # filter for rules that contain one distribution-driven predicate, others are covered by rule_list_0
         rules = []
         for rule in rule_list_1:
             valid = False
@@ -421,62 +422,62 @@ class InvariantRulesIDS(MetaIDS):
         settings.logger.info('rule count: ' + str(len(rule_list_0) + len(rule_list_1)))
 
         # arrange rules based on phase of testbed and prepare for printing
-        phase_dict = {}
-        for i in range(1, len(keyArray) + 1):
-            phase_dict[i] = []
-
-        for rule in rule_list_0:
-            strPrint = ''
-            first = True
-            for item in rule[0]:
-                strPrint += item_dict_0[item] + ' and '
-                if first == True:
-                    first = False
-                    for i in range(0, len(keyArray)):
-                        for key in keyArray[i]:
-                            if key in item_dict_0[item]:
-                                phase = i + 1
-                                break
-
-            strPrint = strPrint[0:len(strPrint) - 4]
-            strPrint += '---> '
-            for item in rule[1]:
-                strPrint += item_dict_0[item] + ' and '
-            strPrint = strPrint[0:len(strPrint) - 4]
-            phase_dict[phase].append(strPrint)
-
-        for rule in rule_list_1:
-            strPrint = ''
-            first = True
-            for item in rule[0]:
-                strPrint += item_dict_1[item] + ' and '
-                if first == True:
-                    first = False
-                    for i in range(0, len(keyArray)):
-                        for key in keyArray[i]:
-                            if key in item_dict_1[item]:
-                                phase = i + 1
-                                break
-
-            strPrint = strPrint[0:len(strPrint) - 4]
-            strPrint += '---> '
-            for item in rule[1]:
-                strPrint += item_dict_1[item] + ' and '
-            strPrint = strPrint[0:len(strPrint) - 4]
-            phase_dict[phase].append(strPrint)
-
-        invariance_file = "./my_tests/data/invariants/invariants_gamma=" + str(self.settings["gamma_value"]) + \
-                          '&theta=' + str(self.settings["theta_value"]) + ".txt"
-        with open(invariance_file, "w") as myfile:
-            for i in range(1, len(keyArray) + 1):
-                myfile.write('P' + str(i) + ':' + '\n')
-
-                for rule in phase_dict[i]:
-                    myfile.write(rule + '\n')
-                    myfile.write('\n')
-
-                myfile.write('--------------------------------------------------------------------------- ' + '\n')
-            myfile.close()
+        # phase_dict = {}
+        # for i in range(1, len(keyArray) + 1):
+        #     phase_dict[i] = []
+        #
+        # for rule in rule_list_0:
+        #     strPrint = ''
+        #     first = True
+        #     for item in rule[0]:
+        #         strPrint += item_dict_0[item] + ' and '
+        #         if first == True:
+        #             first = False
+        #             for i in range(0, len(keyArray)):
+        #                 for key in keyArray[i]:
+        #                     if key in item_dict_0[item]:
+        #                         phase = i + 1
+        #                         break
+        #
+        #     strPrint = strPrint[0:len(strPrint) - 4]
+        #     strPrint += '---> '
+        #     for item in rule[1]:
+        #         strPrint += item_dict_0[item] + ' and '
+        #     strPrint = strPrint[0:len(strPrint) - 4]
+        #     phase_dict[phase].append(strPrint)
+        #
+        # for rule in rule_list_1:
+        #     strPrint = ''
+        #     first = True
+        #     for item in rule[0]:
+        #         strPrint += item_dict_1[item] + ' and '
+        #         if first == True:
+        #             first = False
+        #             for i in range(0, len(keyArray)):
+        #                 for key in keyArray[i]:
+        #                     if key in item_dict_1[item]:
+        #                         phase = i + 1
+        #                         break
+        #
+        #     strPrint = strPrint[0:len(strPrint) - 4]
+        #     strPrint += '---> '
+        #     for item in rule[1]:
+        #         strPrint += item_dict_1[item] + ' and '
+        #     strPrint = strPrint[0:len(strPrint) - 4]
+        #     phase_dict[phase].append(strPrint)
+        #
+        # invariance_file = "./my_tests/data/invariants/invariants_gamma=" + str(self.settings["gamma_value"]) + \
+        #                   '&theta=' + str(self.settings["theta_value"]) + ".txt"
+        # with open(invariance_file, "w") as myfile:
+        #     for i in range(1, len(keyArray) + 1):
+        #         myfile.write('P' + str(i) + ':' + '\n')
+        #
+        #         for rule in phase_dict[i]:
+        #             myfile.write(rule + '\n')
+        #             myfile.write('\n')
+        #
+        #         myfile.write('--------------------------------------------------------------------------- ' + '\n')
+        #     myfile.close()
 
         all_rules = []
         for rule in rule_list_0:
@@ -517,7 +518,6 @@ class InvariantRulesIDS(MetaIDS):
         else:
             self.rule_list = all_rules
 
-
     def new_state_msg(self, msg: {}):
         settings.logger.debug("Current state message {}".format(msg))
         if not self.last_state:
@@ -528,6 +528,10 @@ class InvariantRulesIDS(MetaIDS):
         # preprocess msg
         for s in msg["state"]:
             if s in self.actuators:
+                if states[s] not in self.actuators[s]:
+                    self.last_state = msg["state"]
+                    return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
+                                                        "msg": "actuator state never occurred during training"}}
                 for x in self.actuators[s]:
                     if x != states[s]:
                         states[s + "!=" + str(x)] = 1
@@ -549,7 +553,7 @@ class InvariantRulesIDS(MetaIDS):
                                                         "msg": "sensor update never occurred during training"}}
             else:
                 # static components were removed during training. Check if this component is static
-                if self.last_state[s] and msg[s] and self.last_state[s] != msg[s]:
+                if self.last_state[s] and states[s] and self.last_state[s] != states[s]:
                     settings.logger.info("State contains change component which was static during training")
                     self.last_state = msg["state"]
                     return True, {"state": s, "alert": {"gmm_score": None, "threshold": None, "rule": "",
