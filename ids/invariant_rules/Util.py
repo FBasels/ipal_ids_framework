@@ -3,6 +3,8 @@ Created on 4 Sep 2017
 
 @author: cf1510
 '''
+import time
+
 import numpy as np
 import ids.invariant_rules.RuleMiningUtil.MISTree as MISTree
 import ids.invariant_rules.RuleMiningUtil.RuleGenerator as RuleGenerator
@@ -66,7 +68,7 @@ def conRangeEntry(target_var, lb, ub, max_dict, min_dict):
         :max_k: maximal length of frequent item sets
         :theta: as in paper, in (0, gamma), defines minimum fraction of samples in datalog. Very rare items are excluded
 """
-def getRules(training_data, dead_entries, keyArray, mode=0, gamma=0.4, max_k=4, theta=0.1, parallel_filter=True):
+def getRules(training_data, dead_entries, keyArray, mode=0, gamma=0.4, max_k=4, theta=0.1, parallel_filter=False):
     data = training_data.copy()
     data = data.astype(np.int64)
     # drop entries with only one value
@@ -104,18 +106,28 @@ def getRules(training_data, dead_entries, keyArray, mode=0, gamma=0.4, max_k=4, 
     item_count_dict = MISTree.count_items(dataset)
 
     settings.logger.debug("generating MISTree...")
+    s = time.time()
     root, MIN_freq_item_header_table, MIN, MIN_freq_item_header_dict = MISTree.genMIS_tree(dataset, item_count_dict, minSup_dict)
+    settings.logger.debug("Finished building tree in {} minutes".format((time.time() - s)*1.0/60))
 
-    settings.logger.debug("Starting CFP growth algorithm")
+    settings.logger.debug("Starting CFP growth algorithm...")
+    s = time.time()
     freq_patterns, support_data = MISTree.CFP_growth(root, MIN_freq_item_header_table, minSup_dict, max_k)
-    settings.logger.debug("Filtering closed Patterns")
+    settings.logger.debug("Finished CFP growth in {} minutes".format((time.time() - s)*1.0/60))
+
+    settings.logger.debug("Filtering closed Patterns...")
+    s = time.time()
     if parallel_filter:
         L = RuleGenerator.filterClosedPatternsParallel(freq_patterns, support_data, item_count_dict, max_k, MIN)
     else:
         L = RuleGenerator.filterClosedPatternsSeq(freq_patterns, support_data, item_count_dict, max_k, MIN)
+    settings.logger.debug("Finished filtering closed patterns in {} minutes".format((time.time() - s)*1.0/60))
+
 
     settings.logger.debug("Generating Rules from closed patterns")
+    s = time.time()
     rules = RuleGenerator.generateRules(L, support_data, MIN_freq_item_header_dict, minSup_dict, min_confidence=1)
+    settings.logger.debug("Finished rule generation in {} minutes".format((time.time() - s)*1.0/60))
     
     valid_rules = []
     for rule in rules:
