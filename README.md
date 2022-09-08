@@ -14,26 +14,27 @@ This repository contains the ``ipal-iids`` framework together with implementatio
 
 The IIDS framework contains implementations of the following IIDSs. Note that we distinguish between IIDSs operating on the IPAL [message format](https://github.com/fkie-cad/ipal_transcriber#message-format) (on a per-network packet basis) or on the IPAL [state format](https://github.com/fkie-cad/ipal_transcriber#state-format) (a summary of all industrial process values for a given point in time).
 
-| IDSs                   | Type          | Publication/Source Code                                      | Description                                                  |
-| ---------------------- | ------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Autoregression         | State         | [Paper](https://doi.org/10.1145/3243734.3243781), [Paper](https://doi.org/10.1145/2664243.2664277), [Code](https://github.com/RhysU/ar) | Process prediction (not reproduced)                                     |
-| BLSTM                  | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Bidirectional Long Short Term Memory      |
-| Decision Trees |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced) |
-| Dummy                | Message/State | --                                                           | Implements a Dummy IDS that always or never alerts. |
-| DTMC*                   | Message       | [Paper](https://doi.org/10.1007/978-3-319-74947-1_4), [Code](https://github.com/jjchromik/intravis) | Packet Sequences - Discrete-time Markov Chains               |
-| Extra Trees |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced) |
-| Inter-arrival time     | Message       | [Paper](https://doi.org/10.1007/978-3-319-99843-5_5)         | Packet Inter-arrival time |
-| Isolation Forest |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced) |
-| SIMPLE-Histogram              | Message/State | --                                                           | Histogramm of a sensor over time.                            |
-| SIMPLE-MinMax                 | Message/State | --                                                           | Minimum and Maximum of a value plus threshold                |
-| SIMPLE-Steadytime              | Message/State | --                                                           | Compares longest or shortest time in a single state of a sensor.  |
-| Naive Bayes    | Message/State | [Paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7573322) | (not reproduced)
+| IDSs                   | Type          | Publication/Source Code                                      | Description                                                                              |
+|------------------------| ------------- | ------------------------------------------------------------ |------------------------------------------------------------------------------------------|
+| Autoregression         | State         | [Paper](https://doi.org/10.1145/3243734.3243781), [Paper](https://doi.org/10.1145/2664243.2664277), [Code](https://github.com/RhysU/ar) | Process prediction (not reproduced)                                                      |
+| BLSTM                  | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Bidirectional Long Short Term Memory                                  |
+| Decision Trees         |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced)                                                                         |
+| Dummy                  | Message/State | --                                                           | Implements a Dummy IDS that always or never alerts.                                      |
+| DTMC*                  | Message       | [Paper](https://doi.org/10.1007/978-3-319-74947-1_4), [Code](https://github.com/jjchromik/intravis) | Packet Sequences - Discrete-time Markov Chains                                           |
+| Extra Trees            |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced)                                                                         |
+| Inter-arrival time     | Message       | [Paper](https://doi.org/10.1007/978-3-319-99843-5_5)         | Packet Inter-arrival time                                                                |
+| Isolation Forest       |Message/State | [Paper](https://dl.acm.org/doi/10.1145/3387940.3391486) [Code](https://zenodo.org/record/3699088) | (not reproduced)                                                                         |
+| SIMPLE-Histogram       | Message/State | --                                                           | Histogramm of a sensor over time.                                                        |
+| SIMPLE-MinMax          | Message/State | --                                                           | Minimum and Maximum of a value plus threshold                                            |
+| SIMPLE-Steadytime      | Message/State | --                                                           | Compares longest or shortest time in a single state of a sensor.                         |
+| Naive Bayes            | Message/State | [Paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7573322) | (not reproduced)                                                                         
 | Optimal                | Message/State | --                                                           | Implements a "Oracle" that always classifies correctly (or always incorrect if desired). |
-| PASAD*                  | State         | [Paper](https://doi.org/10.1145/3243734.3243781), [Code](https://github.com/mikeliturbe/pasad), [Code](https://github.com/rahulrajpl/PyPASAD) | Process prediction - Process-Aware Stealthy Attack Detector |
-| Random Forest          | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Random Forest |
-| Seq2SeqNN*              | State         | [Paper](https://doi.org/10.1007/978-3-030-42048-2_1), [Code](https://github.com/jukworks/swat-seq2seq) | Process Prediction - Sequence-to-Sequence Neural Networks    |
-| Support Vector Machine | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Support Vector Machine                    |
-| TABOR*                  | State         | [Paper](https://doi.org/10.1145/3196494.3196546)             | Process Sequences - Time Automata and Bayesian netwORk |
+| PASAD*                 | State         | [Paper](https://doi.org/10.1145/3243734.3243781), [Code](https://github.com/mikeliturbe/pasad), [Code](https://github.com/rahulrajpl/PyPASAD) | Process prediction - Process-Aware Stealthy Attack Detector                              |
+| Random Forest          | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Random Forest                                                         |
+| Seq2SeqNN*             | State         | [Paper](https://doi.org/10.1007/978-3-030-42048-2_1), [Code](https://github.com/jukworks/swat-seq2seq) | Process Prediction - Sequence-to-Sequence Neural Networks                                |
+| Support Vector Machine | Message/State | [Paper](https://doi.org/10.1109/TrustCom%2FBigDataSE.2018.00094), [Code](https://github.com/Rocionightwater/ML-NIDS-for-SCADA) | Machine Learning - Support Vector Machine                                                |
+| TABOR*                 | State         | [Paper](https://doi.org/10.1145/3196494.3196546)             | Process Sequences - Time Automata and Bayesian netwORk                                   |
+| Invariant Rules*       | State         | [Paper](http://dx.doi.org/10.14722/ndss.2019.23265), [Code](https://github.com/cfeng783/NDSS19_InvariantRuleAD) | Compares states against invariant rules generated from training dataset                  |
 Note: IDSs marked with * are not available publically, but can be obtained on request.
 
 ###### Publications
@@ -244,6 +245,7 @@ The process for adding a new state extraction method is the following:
 - Lea Thiemt (RWTH Aachen University)
 - Sven Zemanek (Fraunhofer FKIE)
 - Dominik Kus (RWTH Aachen University)
+- Frederik Basels (RWTH Aachen University)
 
 ## License
 
